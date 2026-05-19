@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useGame } from '@/hooks/useGame';
 import Card from '@/components/Card';
+import { canPlayCard } from '@/lib/game-logic';
 
 export default function Home() {
   const [playerName, setPlayerName] = useState('');
@@ -42,7 +43,32 @@ export default function Home() {
   };
 
   const handlePlayCards = (source: 'hand' | 'faceUp' | 'faceDown') => {
-    if (selectedCards.length === 0) return;
+    if (selectedCards.length === 0 || !gameState) return;
+
+    // Validation
+    const cardsToPlay = selectedCards.map(id => {
+      if (source === 'hand') return me.hand.find(c => c.id === id);
+      if (source === 'faceUp') return me.faceUp.find(c => c.id === id);
+      if (source === 'faceDown') return me.faceDown.find(c => c.id === id);
+      return null;
+    }).filter(c => c !== null);
+
+    if (cardsToPlay.length === 0) return;
+
+    const firstRank = cardsToPlay[0]!.rank;
+    if (!cardsToPlay.every(c => c!.rank === firstRank)) {
+      alert('All played cards must have the same rank');
+      return;
+    }
+
+    if (source !== 'faceDown') {
+      const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+      if (!canPlayCard(firstRank, topCard, gameState.lastMoveEffect)) {
+        alert('Invalid move: card rank too low');
+        return;
+      }
+    }
+
     performMove({ type: 'PLAY_CARDS', cardIds: selectedCards, source });
     setSelectedCards([]);
   };

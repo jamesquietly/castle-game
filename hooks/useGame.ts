@@ -9,7 +9,7 @@ export type Message =
   | { type: 'PICK_UP_PILE' }
   | { type: 'JOIN_GAME', playerName: string }
   | { type: 'START_GAME' }
-  | { type: 'SWAP_CARDS', handCardId: string, faceUpCardId: string }
+  | { type: 'SWAP_CARDS', playerId: string, handCardId: string, faceUpCardId: string }
   | { type: 'SET_READY', playerId: string }
   | { type: 'LOBBY_UPDATE', players: { id: string, name: string }[] };
 
@@ -62,7 +62,7 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
         } else if (msg.type === 'PICK_UP_PILE') {
           nextState = pickUpPile(currentState);
         } else if (msg.type === 'SWAP_CARDS') {
-          nextState = swapCards(currentState, msg.handCardId, msg.faceUpCardId);
+          nextState = swapCards(currentState, msg.playerId, msg.handCardId, msg.faceUpCardId);
         } else if (msg.type === 'SET_READY') {
           nextState = setReady(currentState, msg.playerId);
         }

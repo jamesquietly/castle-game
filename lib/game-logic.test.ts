@@ -34,18 +34,26 @@ describe('game-logic', () => {
 
   it('should allow swapping cards and getting ready', () => {
     const state = initializeGame(['Alice', 'Bob']);
-    const handCard = state.players[0].hand[0];
-    const faceUpCard = state.players[0].faceUp[0];
+    const aliceHandCard = state.players[0].hand[0];
+    const aliceFaceUpCard = state.players[0].faceUp[0];
 
-    const state1 = swapCards(state, handCard.id, faceUpCard.id);
-    expect(state1.players[0].hand[0].id).toBe(faceUpCard.id);
-    expect(state1.players[0].faceUp[0].id).toBe(handCard.id);
+    // Alice swaps
+    const state1 = swapCards(state, state.players[0].id, aliceHandCard.id, aliceFaceUpCard.id);
+    expect(state1.players[0].hand[0].id).toBe(aliceFaceUpCard.id);
+    expect(state1.players[0].faceUp[0].id).toBe(aliceHandCard.id);
 
-    const state2 = setReady(state1, state1.players[0].id);
-    expect(state2.phase).toBe('DEALING');
+    // Bob swaps
+    const bobHandCard = state.players[1].hand[0];
+    const bobFaceUpCard = state.players[1].faceUp[0];
+    const state2 = swapCards(state1, state.players[1].id, bobHandCard.id, bobFaceUpCard.id);
+    expect(state2.players[1].hand[0].id).toBe(bobFaceUpCard.id);
+    expect(state2.players[1].faceUp[0].id).toBe(bobHandCard.id);
 
-    const state3 = setReady(state2, state2.players[1].id);
-    expect(state3.phase).toBe('PLAYING');
+    const state3 = setReady(state2, state.players[0].id);
+    expect(state3.phase).toBe('DEALING');
+
+    const state4 = setReady(state3, state.players[1].id);
+    expect(state4.phase).toBe('PLAYING');
   });
 
   it('should allow playing a valid card and refill hand', () => {

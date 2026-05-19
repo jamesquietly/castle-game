@@ -1,24 +1,27 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useGame } from '@/hooks/useGame';
 import Card from '@/components/Card';
 
 export default function Home() {
   const [playerName, setPlayerName] = useState('');
   const [roomIdInput, setRoomIdInput] = useState('');
-  const [role, setRole] = useState<'HOST' | 'CLIENT' | null>(null);
-  const [roomToJoin, setRoomToJoin] = useState<string | null>(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room');
-    if (room) {
-      setRoomToJoin(room);
-      setRole('CLIENT');
+  const [role, setRole] = useState<'HOST' | 'CLIENT' | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('room') ? 'CLIENT' : null;
     }
-  }, []);
+    return null;
+  });
+  const [roomToJoin, setRoomToJoin] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('room');
+    }
+    return null;
+  });
 
   const { gameState, peerId, players, performMove, startGame, error } = useGame(
     role === 'HOST',
@@ -53,7 +56,7 @@ export default function Home() {
   };
 
   const handleSwap = (handCardId: string, faceUpCardId: string) => {
-    performMove({ type: 'SWAP_CARDS', handCardId, faceUpCardId });
+    performMove({ type: 'SWAP_CARDS', playerId: peerId, handCardId, faceUpCardId });
     setSelectedCards([]);
   };
 

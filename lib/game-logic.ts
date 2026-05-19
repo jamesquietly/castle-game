@@ -107,11 +107,13 @@ export function initializeGame(playerNames: string[]): GameState {
   };
 }
 
-export function swapCards(state: GameState, handCardId: string, faceUpCardId: string): GameState {
+export function swapCards(state: GameState, playerId: string, handCardId: string, faceUpCardId: string): GameState {
   if (state.phase !== 'DEALING') throw new Error('Can only swap cards during DEALING phase');
 
   const newState = JSON.parse(JSON.stringify(state)) as GameState;
-  const player = newState.players[newState.currentPlayerIndex];
+  const player = newState.players.find(p => p.id === playerId);
+
+  if (!player) throw new Error('Player not found');
 
   const handCardIndex = player.hand.findIndex(c => c.id === handCardId);
   const faceUpCardIndex = player.faceUp.findIndex(c => c.id === faceUpCardId);

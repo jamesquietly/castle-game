@@ -10,7 +10,8 @@ export type Message =
   | { type: 'JOIN_GAME', playerName: string }
   | { type: 'START_GAME' }
   | { type: 'SWAP_CARDS', handCardId: string, faceUpCardId: string }
-  | { type: 'SET_READY', playerId: string };
+  | { type: 'SET_READY', playerId: string }
+  | { type: 'LOBBY_UPDATE', players: { id: string, name: string }[] };
 
 export interface PeerPlayer {
   id: string;
@@ -25,19 +26,34 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
   const peerRef = useRef<Peer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const connectionsRef = useRef<Map<string, DataConnection>>(new Map());
+  const playersRef = useRef<PeerPlayer[]>([]);
 
-  const broadcastState = useCallback((state: GameState) => {
+  const isHostRef = useRef(isHost);
+  const roomIdRef = useRef(roomId);
+  const playerNameRef = useRef(playerName);
+
+  useEffect(() => {
+    isHostRef.current = isHost;
+    roomIdRef.current = roomId;
+    playerNameRef.current = playerName;
+  }, [isHost, roomId, playerName]);
+
+  const broadcastToAll = useCallback((msg: Message) => {
     connectionsRef.current.forEach(conn => {
       if (conn.open) {
-        conn.send({ type: 'STATE_UPDATE', state });
+        conn.send(msg);
       }
     });
-    setGameState(state);
   }, []);
+
+  const broadcastState = useCallback((state: GameState) => {
+    broadcastToAll({ type: 'STATE_UPDATE', state });
+    setGameState(state);
+  }, [broadcastToAll]);
 
   const handleAction = useCallback((msg: Message) => {
     setGameState((currentState) => {
-      if (!isHost || !currentState) return currentState;
+      if (!isHostRef.current || !currentState) return currentState;
 
       let nextState = currentState;
       try {
@@ -52,7 +68,6 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
         }
 
         if (nextState !== currentState) {
-          // Delay broadcast to outside of setGameState
           const updatedState = nextState;
           setTimeout(() => broadcastState(updatedState), 0);
         }
@@ -61,7 +76,7 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
       }
       return nextState;
     });
-  }, [isHost, broadcastState]);
+  }, [broadcastState]);
 
   useEffect(() => {
     const peer = new Peer(isHost ? roomId : undefined);
@@ -69,8 +84,10 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
 
     peer.on('open', (id) => {
       setPeerId(id);
-      if (isHost && playerName) {
-        setPlayers([{ id, name: playerName }]);
+      if (isHostRef.current && playerNameRef.current) {
+        const initialPlayers = [{ id, name: playerNameRef.current }];
+        setPlayers(initialPlayers);
+        playersRef.current = initialPlayers;
       }
     });
 
@@ -87,10 +104,17 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
         conn.on('data', (data: unknown) => {
           const msg = data as Message;
           if (msg.type === 'JOIN_GAME') {
-            setPlayers(prev => {
-              if (prev.find(p => p.id === conn.peer)) return prev;
-              return [...prev, { id: conn.peer, name: msg.playerName }];
-            });
+            const currentPlayers = playersRef.current;
+            if (!currentPlayers.find(p => p.id === conn.peer)) {
+              const newPlayers = [...currentPlayers, { id: conn.peer, name: msg.playerName }];
+              playersRef.current = newPlayers;
+              setPlayers(newPlayers);
+
+              broadcastToAll({
+                type: 'LOBBY_UPDATE',
+                players: newPlayers.map(p => ({ id: p.id, name: p.name }))
+              });
+            }
           } else {
             handleAction(msg);
           }
@@ -98,27 +122,43 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
 
         conn.on('close', () => {
           connectionsRef.current.delete(conn.peer);
-          setPlayers(prev => prev.filter(p => p.id !== conn.peer));
+          const newPlayers = playersRef.current.filter(p => p.id !== conn.peer);
+          playersRef.current = newPlayers;
+          setPlayers(newPlayers);
+          broadcastToAll({
+            type: 'LOBBY_UPDATE',
+            players: newPlayers.map(p => ({ id: p.id, name: p.name }))
+          });
         });
       });
     } else if (roomId) {
-      const conn = peer.connect(roomId);
-      conn.on('open', () => {
-        connectionsRef.current.set(roomId, conn);
-        conn.send({ type: 'JOIN_GAME', playerName: playerName || 'Player' });
-      });
-      conn.on('data', (data: unknown) => {
-        const msg = data as Message;
-        if (msg.type === 'STATE_UPDATE') {
-          setGameState(msg.state);
-        }
-      });
+      const connectToHost = () => {
+          if (!peerRef.current || peerRef.current.destroyed) return;
+          const conn = peerRef.current.connect(roomId);
+          conn.on('open', () => {
+            connectionsRef.current.set(roomId, conn);
+            conn.send({ type: 'JOIN_GAME', playerName: playerNameRef.current || 'Player' });
+          });
+          conn.on('data', (data: unknown) => {
+            const msg = data as Message;
+            if (msg.type === 'STATE_UPDATE') {
+              setGameState(msg.state);
+            } else if (msg.type === 'LOBBY_UPDATE') {
+              setPlayers(msg.players);
+            }
+          });
+          conn.on('close', () => {
+              setTimeout(connectToHost, 1000);
+          });
+      };
+
+      setTimeout(connectToHost, 1000);
     }
 
     return () => {
       peer.destroy();
     };
-  }, [isHost, roomId, playerName, handleAction]);
+  }, [isHost, roomId, handleAction, broadcastToAll]);
 
   const performMove = (action: Message) => {
     if (isHost) {
@@ -132,7 +172,6 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
   const startGame = () => {
     if (isHost && players.length >= 2) {
       const initialState = initializeGame(players.map(p => p.name));
-      // Re-map players to include their Peer ID
       initialState.players.forEach((p, i) => {
         p.id = players[i].id;
       });

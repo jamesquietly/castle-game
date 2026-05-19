@@ -117,15 +117,13 @@ describe('game-logic', () => {
     const newState = playCards(state, ['C2']);
 
     expect(newState.lastMoveEffect).toBe('RESET');
-    expect(newState.currentPlayerIndex).toBe(1);
+    expect(newState.currentPlayerIndex).toBe(0); // Alice plays again
 
-    // Bob should be able to play any card now
-    // Force Bob's card to a specific rank (not 10) to avoid side effects in test
-    newState.players[1].hand[0] = { suit: 'SPADES', rank: 5, id: 'S5' };
-    const bobCard = newState.players[1].hand[0];
-    // In our test, bob plays a card. Since it's his turn (1), next player should be (1+1)%2 = 0.
-    const finalState = playCards(newState, [bobCard.id]);
-    expect(finalState.currentPlayerIndex).toBe(0);
+    // Alice should be able to play any card now
+    newState.players[0].hand[0] = { suit: 'SPADES', rank: 5, id: 'S5' };
+    const aliceCard = newState.players[0].hand[0];
+    const finalState = playCards(newState, [aliceCard.id]);
+    expect(finalState.currentPlayerIndex).toBe(1); // Now it's Bob's turn
   });
 
   it('should handle 7 (Lower Than Seven) correctly', () => {

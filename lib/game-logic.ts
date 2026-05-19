@@ -218,7 +218,9 @@ export function playCards(state: GameState, cardIds: string[], source: 'hand' | 
   }
 
   // Next player
-  newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
+  if (firstRank !== 2) {
+    newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
+  }
 
   // Check win condition
   if (player.hand.length === 0 && player.faceUp.length === 0 && player.faceDown.length === 0) {

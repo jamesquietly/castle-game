@@ -163,7 +163,7 @@ describe('game-logic', () => {
     const newState = playCards(state, ['C10']);
 
     expect(newState.discardPile.length).toBe(0); // Burned
-    expect(newState.currentPlayerIndex).toBe(0); // Alice plays again
+    expect(newState.currentPlayerIndex).toBe(1); // Turn moves to Bob
   });
 
   it('should transition to face-up cards when hand and deck are empty', () => {

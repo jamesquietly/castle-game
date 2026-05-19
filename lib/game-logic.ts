@@ -217,11 +217,8 @@ export function playCards(state: GameState, cardIds: string[], source: 'hand' | 
     player.hand.push(newState.deck.pop()!);
   }
 
-  // Next player (unless it was a 10)
-  if (firstRank !== 10) {
-    newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
-  }
-  // Note: if 10 is played, currentPlayerIndex stays the same, they play again.
+  // Next player
+  newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
 
   // Check win condition
   if (player.hand.length === 0 && player.faceUp.length === 0 && player.faceDown.length === 0) {

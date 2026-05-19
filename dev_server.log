@@ -1,0 +1,24 @@
+
+> castle-game@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 621ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+○ Compiling / ...
+ GET / 200 in 5.8s (next.js: 5.4s, application-code: 374ms)
+ GET / 200 in 64ms (next.js: 7ms, application-code: 58ms)
+ GET / 200 in 173ms (next.js: 14ms, application-code: 160ms)
+ GET / 200 in 107ms (next.js: 7ms, application-code: 101ms)
+ GET / 200 in 51ms (next.js: 4ms, application-code: 48ms)
+ GET / 200 in 55ms (next.js: 4ms, application-code: 51ms)
+ GET / 200 in 46ms (next.js: 4ms, application-code: 42ms)
+ GET / 200 in 54ms (next.js: 3ms, application-code: 51ms)
+ GET / 200 in 66ms (next.js: 6ms, application-code: 60ms)

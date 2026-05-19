@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from '@/hooks/useGame';
 import Card from '@/components/Card';
 
@@ -10,6 +10,15 @@ export default function Home() {
   const [roomIdInput, setRoomIdInput] = useState('');
   const [role, setRole] = useState<'HOST' | 'CLIENT' | null>(null);
   const [roomToJoin, setRoomToJoin] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room');
+    if (room) {
+      setRoomToJoin(room);
+      setRole('CLIENT');
+    }
+  }, []);
 
   const { gameState, peerId, players, performMove, startGame, error } = useGame(
     role === 'HOST',
@@ -46,6 +55,13 @@ export default function Home() {
   const handleSwap = (handCardId: string, faceUpCardId: string) => {
     performMove({ type: 'SWAP_CARDS', handCardId, faceUpCardId });
     setSelectedCards([]);
+  };
+
+  const copyInviteLink = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('room', peerId || roomToJoin || '');
+    navigator.clipboard.writeText(url.toString());
+    alert('Invite link copied to clipboard!');
   };
 
   if (!role) {
@@ -106,6 +122,12 @@ export default function Home() {
             ))}
           </ul>
         </div>
+        <button
+          className="bg-gray-700 p-2 rounded mb-8 text-sm"
+          onClick={copyInviteLink}
+        >
+          Copy Invite Link
+        </button>
         {role === 'HOST' ? (
           <button
             disabled={players.length < 2}

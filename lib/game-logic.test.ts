@@ -112,6 +112,8 @@ describe('game-logic', () => {
     expect(newState.currentPlayerIndex).toBe(1);
 
     // Bob should be able to play any card now
+    // Force Bob's card to a specific rank (not 10) to avoid side effects in test
+    newState.players[1].hand[0] = { suit: 'SPADES', rank: 5, id: 'S5' };
     const bobCard = newState.players[1].hand[0];
     // In our test, bob plays a card. Since it's his turn (1), next player should be (1+1)%2 = 0.
     const finalState = playCards(newState, [bobCard.id]);

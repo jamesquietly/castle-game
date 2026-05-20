@@ -97,7 +97,7 @@ export default function Home() {
           <input
             type="text"
             placeholder="Your Name"
-            className="p-2 rounded text-black"
+            className="p-2 rounded text-black border border-white text-white"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
           />
@@ -130,7 +130,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Room Code"
-                  className="p-2 rounded text-black flex-1"
+                  className="p-2 rounded text-black flex-1 border border-white text-white"
                   value={roomToJoin || ''}
                   onChange={(e) => setRoomToJoin(e.target.value.toUpperCase())}
                 />

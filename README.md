@@ -1,4 +1,4 @@
-This is a Castle card game built with Next.js
+This is a Castle card game built with Next.js and PeerJS
 
 ## How to start a game
 ### Hosting a game

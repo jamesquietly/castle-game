@@ -338,7 +338,7 @@ export default function Home() {
           <p className="text-2xl">{gameState.winner === me.id ? 'You Won!' : `${gameState.winner} Won!`}</p>
           <button
             className="mt-8 bg-blue-600 px-8 py-3 rounded-full font-bold"
-            onClick={() => window.location.reload()}
+            onClick={() => performMove({ type: 'RESET_GAME' })}
           >
             Play Again
           </button>

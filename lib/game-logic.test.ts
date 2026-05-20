@@ -60,6 +60,8 @@ describe('game-logic', () => {
     const state = initializeGame(['Alice', 'Bob']);
     state.phase = 'PLAYING';
     const player = state.players[0];
+    // Force a non-2, non-10 card to ensure turn advances
+    player.hand[0] = { suit: 'HEARTS', rank: 5, id: 'H5' };
     const cardToPlay = player.hand[0];
 
     const newState = playCards(state, [cardToPlay.id]);
@@ -221,5 +223,18 @@ describe('game-logic', () => {
 
     expect(newState.phase).toBe('GAME_OVER');
     expect(newState.winner).toBe(state.players[0].id);
+  });
+
+  it('should reset the game correctly', () => {
+    const players = ['Alice', 'Bob'];
+    const state = initializeGame(players);
+    state.phase = 'GAME_OVER';
+    state.winner = 'Alice';
+
+    // To reset, we just call initializeGame again
+    const newState = initializeGame(players);
+    expect(newState.phase).toBe('DEALING');
+    expect(newState.discardPile.length).toBe(0);
+    expect(newState.players[0].hand.length).toBe(3);
   });
 });

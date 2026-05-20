@@ -11,7 +11,8 @@ export type Message =
   | { type: 'START_GAME' }
   | { type: 'SWAP_CARDS', playerId: string, handCardId: string, faceUpCardId: string }
   | { type: 'SET_READY', playerId: string }
-  | { type: 'LOBBY_UPDATE', players: { id: string, name: string }[] };
+  | { type: 'LOBBY_UPDATE', players: { id: string, name: string }[] }
+  | { type: 'RESET_GAME' };
 
 export interface PeerPlayer {
   id: string;
@@ -65,6 +66,12 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
           nextState = swapCards(currentState, msg.playerId, msg.handCardId, msg.faceUpCardId);
         } else if (msg.type === 'SET_READY') {
           nextState = setReady(currentState, msg.playerId);
+        } else if (msg.type === 'RESET_GAME') {
+          const names = playersRef.current.map(p => p.name);
+          nextState = initializeGame(names);
+          nextState.players.forEach((p, i) => {
+            p.id = playersRef.current[i].id;
+          });
         }
 
         if (nextState !== currentState) {

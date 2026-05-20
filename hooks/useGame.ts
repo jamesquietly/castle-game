@@ -86,7 +86,7 @@ export function useGame(isHost: boolean, roomId?: string, playerName?: string) {
   }, [broadcastState]);
 
   useEffect(() => {
-    const peer = new Peer(isHost ? roomId : undefined);
+    const peer = new Peer(isHost ? (roomId || '') : '');
     peerRef.current = peer;
 
     peer.on('open', (id) => {

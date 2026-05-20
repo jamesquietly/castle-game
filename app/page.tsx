@@ -9,13 +9,7 @@ import { canPlayCard } from '@/lib/game-logic';
 export default function Home() {
   const [playerName, setPlayerName] = useState('');
   const [roomIdInput, setRoomIdInput] = useState('');
-  const [role, setRole] = useState<'HOST' | 'CLIENT' | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('room') ? 'CLIENT' : null;
-    }
-    return null;
-  });
+  const [role, setRole] = useState<'HOST' | 'CLIENT' | null>(null);
   const [roomToJoin, setRoomToJoin] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -26,7 +20,7 @@ export default function Home() {
 
   const { gameState, peerId, players, performMove, startGame, error } = useGame(
     role === 'HOST',
-    role === 'HOST' ? roomIdInput : roomToJoin || undefined,
+    (role === 'HOST' ? roomIdInput : roomToJoin) || undefined,
     playerName
   );
 
@@ -94,6 +88,8 @@ export default function Home() {
   };
 
   if (!role) {
+    const urlRoom = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('room') : null;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-green-900 text-white p-4">
         <h1 className="text-4xl font-bold mb-8">Castle Card Game</h1>
@@ -105,35 +101,51 @@ export default function Home() {
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
           />
-          <button
-            className="bg-blue-600 p-3 rounded font-bold"
-            onClick={() => {
-              if (!playerName) return;
-              const id = Math.random().toString(36).substring(2, 7).toUpperCase();
-              setRoomIdInput(id);
-              setRole('HOST');
-            }}
-          >
-            Host Game
-          </button>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Room Code"
-              className="p-2 rounded text-black flex-1"
-              value={roomToJoin || ''}
-              onChange={(e) => setRoomToJoin(e.target.value.toUpperCase())}
-            />
-            <button
-              className="bg-green-600 p-3 rounded font-bold"
-              onClick={() => {
-                if (!playerName || !roomToJoin) return;
-                setRole('CLIENT');
-              }}
-            >
-              Join
-            </button>
-          </div>
+
+          {urlRoom ? (
+             <button
+                disabled={!playerName}
+                className="bg-green-600 p-3 rounded font-bold disabled:opacity-50"
+                onClick={() => {
+                  setRoomToJoin(urlRoom);
+                  setRole('CLIENT');
+                }}
+              >
+                Join Game: {urlRoom}
+              </button>
+          ) : (
+            <>
+              <button
+                className="bg-blue-600 p-3 rounded font-bold"
+                onClick={() => {
+                  if (!playerName) return;
+                  const id = Math.random().toString(36).substring(2, 7).toUpperCase();
+                  setRoomIdInput(id);
+                  setRole('HOST');
+                }}
+              >
+                Host Game
+              </button>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Room Code"
+                  className="p-2 rounded text-black flex-1"
+                  value={roomToJoin || ''}
+                  onChange={(e) => setRoomToJoin(e.target.value.toUpperCase())}
+                />
+                <button
+                  className="bg-green-600 p-3 rounded font-bold"
+                  onClick={() => {
+                    if (!playerName || !roomToJoin) return;
+                    setRole('CLIENT');
+                  }}
+                >
+                  Join
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
